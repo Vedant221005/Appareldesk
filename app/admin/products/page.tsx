@@ -6,6 +6,7 @@ import { ProductsClient } from "./products-client"
 
 async function getProducts() {
   const products = await prisma.product.findMany({
+    where: { deletedAt: null },
     orderBy: { createdAt: "desc" },
   })
   

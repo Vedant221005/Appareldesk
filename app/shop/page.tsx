@@ -7,7 +7,10 @@ import Image from "next/image"
 
 async function getFeaturedProducts() {
   return await prisma.product.findMany({
-    where: { isPublished: true },
+    where: { 
+      isPublished: true,
+      deletedAt: null,
+    },
     orderBy: { createdAt: "desc" },
     take: 8,
   })

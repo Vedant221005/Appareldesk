@@ -7,7 +7,7 @@ async function getProduct(id: string) {
     where: { id: id },
   })
 
-  if (!product) {
+  if (!product || product.deletedAt) {
     notFound()
   }
 

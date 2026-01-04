@@ -47,8 +47,8 @@ export function ProductCard({ product }: ProductCardProps) {
 
   return (
     <Link href={`/shop/products/${product.slug}`}>
-      <Card className="overflow-hidden hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col">
-        <div className="relative aspect-square bg-gray-100">
+      <Card className="overflow-hidden cursor-pointer h-full flex flex-col border-2 border-gray-800 hover:border-primary transition-all duration-300">
+        <div className="relative aspect-[4/3] bg-gray-100">
           {hasImage ? (
             <Image
               src={product.images[0]}
@@ -71,48 +71,48 @@ export function ProductCard({ product }: ProductCardProps) {
           )}
         </div>
 
-        <div className="p-4 flex-1 flex flex-col">
+        <div className="p-3 flex-1 flex flex-col">
           <div className="flex items-start justify-between gap-2 mb-2">
-            <h3 className="font-semibold text-lg line-clamp-2">{product.name}</h3>
+            <h3 className="font-semibold text-base line-clamp-2 text-white">{product.name}</h3>
           </div>
 
           {product.description && (
-            <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+            <p className="text-xs text-gray-400 line-clamp-2 mb-2">
               {product.description}
             </p>
           )}
 
-          <div className="flex flex-wrap gap-2 mb-3">
+          <div className="flex flex-wrap gap-1.5 mb-2">
             {product.category && (
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-[10px] py-0 h-5 border-gray-700 text-gray-300">
                 {product.category}
               </Badge>
             )}
             {product.type && (
-              <Badge variant="outline" className="text-xs">
+              <Badge variant="outline" className="text-[10px] py-0 h-5 border-gray-700 text-gray-300">
                 {product.type}
               </Badge>
             )}
           </div>
 
-          <div className="mt-auto space-y-3">
+          <div className="mt-auto space-y-2">
             <div className="flex items-center justify-between">
-              <span className="text-2xl font-bold text-green-600">
+              <span className="text-xl font-bold text-primary">
                 ₹{product.price.toLocaleString()}
               </span>
               {!isOutOfStock && (
-                <span className="text-sm text-gray-500">
+                <span className="text-xs text-gray-500">
                   {product.stock} in stock
                 </span>
               )}
             </div>
 
             <Button
-              className="w-full"
+              className="w-full h-9 text-sm"
               disabled={isOutOfStock || isAdding}
               onClick={handleAddToCart}
             >
-              <ShoppingCart className="h-4 w-4 mr-2" />
+              <ShoppingCart className="h-3.5 w-3.5 mr-1.5" />
               {isOutOfStock ? "Out of Stock" : isAdding ? "Adding..." : "Add to Cart"}
             </Button>
           </div>

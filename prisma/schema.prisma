@@ -116,6 +116,7 @@ model Product {
   stock         Int       @default(0)
   images        String[]
   isPublished   Boolean   @default(false)
+  deletedAt     DateTime? // Soft delete timestamp
   
   // Relations
   saleOrderItems    SaleOrderItem[]
@@ -131,6 +132,7 @@ model Product {
   @@index([stock])
   @@index([isPublished])
   @@index([name])
+  @@index([deletedAt])
 }
 
 enum DiscountType {

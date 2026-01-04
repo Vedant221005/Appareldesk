@@ -47,8 +47,8 @@ export function BulkActions({
       toast.success(`Successfully deleted ${selectedIds.length} ${type}`)
       onClearSelection()
       setShowDeleteDialog(false)
-    } catch (error) {
-      toast.error(`Failed to delete ${type}`)
+    } catch (error: any) {
+      toast.error(error.message || `Failed to delete ${type}`)
     } finally {
       setIsLoading(false)
     }

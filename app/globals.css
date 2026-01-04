@@ -60,7 +60,7 @@
   --popover-foreground: oklch(1 0 0);
   
   /* Primary: Light Yellow */
-  --primary: oklch(0.85 0.15 85);
+  --primary: oklch(0.80 0.15 85);
   --primary-foreground: oklch(0 0 0);
   
   /* Secondary: Darker for contrast */

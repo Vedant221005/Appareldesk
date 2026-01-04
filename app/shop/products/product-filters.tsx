@@ -53,7 +53,7 @@ export function ProductFilters({ filterOptions }: ProductFiltersProps) {
   }
 
   return (
-    <Card className="p-6">
+    <Card className="p-6 border-2 border-gray-800">
       <div className="space-y-6">
         {/* Search */}
         <form onSubmit={handleSearchSubmit} className="flex gap-2">
@@ -64,7 +64,7 @@ export function ProductFilters({ filterOptions }: ProductFiltersProps) {
               placeholder="Search products..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
+              className="pl-10 border-gray-700 text-white placeholder:text-gray-500"
             />
           </div>
           <Button type="submit">Search</Button>
@@ -73,12 +73,12 @@ export function ProductFilters({ filterOptions }: ProductFiltersProps) {
         {/* Active Filters */}
         {hasActiveFilters && (
           <div className="flex flex-wrap items-center gap-2">
-            <span className="text-sm font-medium">Active Filters:</span>
+            <span className="text-sm font-medium text-white">Active Filters:</span>
             {search && (
-              <Badge variant="secondary" className="gap-1">
+              <Badge variant="secondary" className="gap-1 text-white border-gray-700">
                 Search: {search}
                 <X
-                  className="h-3 w-3 cursor-pointer"
+                  className="h-3 w-3 cursor-pointer hover:text-primary"
                   onClick={() => {
                     setSearch("")
                     updateFilters("search", "")
@@ -87,10 +87,10 @@ export function ProductFilters({ filterOptions }: ProductFiltersProps) {
               </Badge>
             )}
             {selectedCategory && (
-              <Badge variant="secondary" className="gap-1">
+              <Badge variant="secondary" className="gap-1 text-white border-gray-700">
                 {selectedCategory}
                 <X
-                  className="h-3 w-3 cursor-pointer"
+                  className="h-3 w-3 cursor-pointer hover:text-primary"
                   onClick={() => {
                     setSelectedCategory("")
                     updateFilters("category", "")
@@ -99,10 +99,10 @@ export function ProductFilters({ filterOptions }: ProductFiltersProps) {
               </Badge>
             )}
             {selectedType && (
-              <Badge variant="secondary" className="gap-1">
+              <Badge variant="secondary" className="gap-1 text-white border-gray-700">
                 {selectedType}
                 <X
-                  className="h-3 w-3 cursor-pointer"
+                  className="h-3 w-3 cursor-pointer hover:text-primary"
                   onClick={() => {
                     setSelectedType("")
                     updateFilters("type", "")
@@ -111,10 +111,10 @@ export function ProductFilters({ filterOptions }: ProductFiltersProps) {
               </Badge>
             )}
             {selectedMaterial && (
-              <Badge variant="secondary" className="gap-1">
+              <Badge variant="secondary" className="gap-1 text-white border-gray-700">
                 {selectedMaterial}
                 <X
-                  className="h-3 w-3 cursor-pointer"
+                  className="h-3 w-3 cursor-pointer hover:text-primary"
                   onClick={() => {
                     setSelectedMaterial("")
                     updateFilters("material", "")
@@ -126,7 +126,7 @@ export function ProductFilters({ filterOptions }: ProductFiltersProps) {
               variant="ghost"
               size="sm"
               onClick={clearAllFilters}
-              className="text-red-600 hover:text-red-700"
+              className="text-red-500 hover:text-red-400"
             >
               Clear All
             </Button>
@@ -137,7 +137,7 @@ export function ProductFilters({ filterOptions }: ProductFiltersProps) {
           {/* Categories */}
           {filterOptions.categories.length > 0 && (
             <div>
-              <h3 className="font-semibold mb-3">Category</h3>
+              <h3 className="font-semibold mb-3 text-white">Category</h3>
               <div className="space-y-2">
                 {filterOptions.categories.map((category) => (
                   <button
@@ -149,8 +149,8 @@ export function ProductFilters({ filterOptions }: ProductFiltersProps) {
                     }}
                     className={`block w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
                       selectedCategory === category
-                        ? "bg-primary text-white"
-                        : "hover:bg-gray-100"
+                        ? "bg-primary text-black font-medium"
+                        : "text-gray-300 hover:text-primary"
                     }`}
                   >
                     {category}
@@ -163,7 +163,7 @@ export function ProductFilters({ filterOptions }: ProductFiltersProps) {
           {/* Types */}
           {filterOptions.types.length > 0 && (
             <div>
-              <h3 className="font-semibold mb-3">Type</h3>
+              <h3 className="font-semibold mb-3 text-white">Type</h3>
               <div className="space-y-2">
                 {filterOptions.types.map((type) => (
                   <button
@@ -175,8 +175,8 @@ export function ProductFilters({ filterOptions }: ProductFiltersProps) {
                     }}
                     className={`block w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
                       selectedType === type
-                        ? "bg-primary text-white"
-                        : "hover:bg-gray-100"
+                        ? "bg-primary text-black font-medium"
+                        : "text-gray-300 hover:text-primary"
                     }`}
                   >
                     {type}
@@ -189,7 +189,7 @@ export function ProductFilters({ filterOptions }: ProductFiltersProps) {
           {/* Materials */}
           {filterOptions.materials.length > 0 && (
             <div>
-              <h3 className="font-semibold mb-3">Material</h3>
+              <h3 className="font-semibold mb-3 text-white">Material</h3>
               <div className="space-y-2">
                 {filterOptions.materials.map((material) => (
                   <button
@@ -201,8 +201,8 @@ export function ProductFilters({ filterOptions }: ProductFiltersProps) {
                     }}
                     className={`block w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
                       selectedMaterial === material
-                        ? "bg-primary text-white"
-                        : "hover:bg-gray-100"
+                        ? "bg-primary text-black font-medium"
+                        : "text-gray-300 hover:text-primary"
                     }`}
                   >
                     {material}

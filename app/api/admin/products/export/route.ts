@@ -15,7 +15,9 @@ export async function GET(req: Request) {
     const category = searchParams.get("category")
     const isPublished = searchParams.get("isPublished")
 
-    const where: any = {}
+    const where: any = {
+      deletedAt: null, // Exclude soft-deleted products
+    }
 
     if (category && category !== "ALL") {
       where.category = category

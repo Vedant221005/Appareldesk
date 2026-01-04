@@ -47,9 +47,12 @@ export async function POST(req: Request) {
           .replace(/^-|-$/g, "")
 
         if (validatedData.mode === "upsert" && productData.name) {
-          // Check if product with same name exists
+          // Check if product with same name exists (excluding deleted)
           const existing = await prisma.product.findFirst({
-            where: { name: productData.name },
+            where: { 
+              name: productData.name,
+              deletedAt: null,
+            },
           })
 
           if (existing) {

@@ -12,7 +12,7 @@ export const GET = withAdminAuth(async (req: Request, { params }: { params: Prom
       where: { id: id },
     })
 
-    if (!product) {
+    if (!product || product.deletedAt) {
       return NextResponse.json(
         { error: "Product not found" },
         { status: 404 }
@@ -48,13 +48,13 @@ export const PUT = withAdminAuth(async (req: Request, { params }: { params: Prom
       )
     }
 
-    // Check if slug is taken by another product
+    // Check if slug is taken by another product (excluding deleted)
     if (validatedData.slug !== existingProduct.slug) {
       const slugTaken = await prisma.product.findUnique({
         where: { slug: validatedData.slug },
       })
 
-      if (slugTaken) {
+      if (slugTaken && !slugTaken.deletedAt) {
         return NextResponse.json(
           { error: "Product with this slug already exists" },
           { status: 400 }
@@ -95,7 +95,7 @@ export const PUT = withAdminAuth(async (req: Request, { params }: { params: Prom
   }
 })
 
-// DELETE product
+// DELETE product (soft delete)
 export const DELETE = withAdminAuth(async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
   try {
     const { id } = await params
@@ -104,15 +104,17 @@ export const DELETE = withAdminAuth(async (req: Request, { params }: { params: P
       where: { id: id },
     })
 
-    if (!existingProduct) {
+    if (!existingProduct || existingProduct.deletedAt) {
       return NextResponse.json(
         { error: "Product not found" },
         { status: 404 }
       )
     }
 
-    await prisma.product.delete({
+    // Soft delete by setting deletedAt timestamp
+    await prisma.product.update({
       where: { id: id },
+      data: { deletedAt: new Date() },
     })
 
     return NextResponse.json({ message: "Product deleted successfully" })

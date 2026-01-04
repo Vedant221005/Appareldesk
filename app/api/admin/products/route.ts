@@ -12,7 +12,9 @@ export const GET = withAdminAuth(async (req: Request) => {
     const category = searchParams.get("category") || ""
     const isPublished = searchParams.get("isPublished")
 
-    const where: any = {}
+    const where: any = {
+      deletedAt: null, // Exclude soft-deleted products
+    }
 
     if (search) {
       where.OR = [
@@ -50,12 +52,12 @@ export const POST = withAdminAuth(async (req: Request) => {
     const body = await req.json()
     const validatedData = productSchema.parse(body)
 
-    // Check if slug already exists
+    // Check if slug already exists (excluding deleted products)
     const existingProduct = await prisma.product.findUnique({
       where: { slug: validatedData.slug },
     })
 
-    if (existingProduct) {
+    if (existingProduct && !existingProduct.deletedAt) {
       return NextResponse.json(
         { error: "Product with this slug already exists" },
         { status: 400 }

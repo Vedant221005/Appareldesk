@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm, Controller } from "react-hook-form"
@@ -13,16 +13,31 @@ import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
 import Link from "next/link"
-import { ArrowLeft } from "lucide-react"
+import { ArrowLeft, Upload, X, Image as ImageIcon } from "lucide-react"
+import Image from "next/image"
 
 interface ProductFormProps {
   product?: ProductFormData & { id: string }
   isEdit?: boolean
 }
 
+// Helper function to normalize text to proper case
+const normalizeText = (text: string): string => {
+  if (!text) return text
+  return text
+    .trim()
+    .toLowerCase()
+    .split(' ')
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ')
+}
+
 export function ProductForm({ product, isEdit }: ProductFormProps) {
   const router = useRouter()
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [uploading, setUploading] = useState(false)
+  const [images, setImages] = useState<string[]>(product?.images || [])
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const {
     register,
@@ -47,7 +62,7 @@ export function ProductForm({ product, isEdit }: ProductFormProps) {
       price: 0,
       stock: 0,
       images: [],
-      isPublished: false,
+      isPublished: true,
     },
   })
 
@@ -62,16 +77,72 @@ export function ProductForm({ product, isEdit }: ProductFormProps) {
     setValue("slug", slug)
   }
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    if (images.length + files.length > 5) {
+      toast.error("Maximum 5 images allowed")
+      return
+    }
+
+    setUploading(true)
+    try {
+      const formData = new FormData()
+      Array.from(files).forEach((file) => {
+        formData.append("files", file)
+      })
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || "Failed to upload images")
+      }
+
+      const data = await response.json()
+      const newImages = [...images, ...data.urls]
+      setImages(newImages)
+      setValue("images", newImages)
+      toast.success("Images uploaded successfully")
+    } catch (error: any) {
+      toast.error(error.message || "Failed to upload images")
+    } finally {
+      setUploading(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
+    }
+  }
+
+  const removeImage = (index: number) => {
+    const newImages = images.filter((_, i) => i !== index)
+    setImages(newImages)
+    setValue("images", newImages)
+  }
+
   const onSubmit = async (data: ProductFormData) => {
     setIsSubmitting(true)
     try {
+      // Normalize category, type, and material to proper case
+      const normalizedData = {
+        ...data,
+        category: data.category ? normalizeText(data.category) : data.category,
+        type: data.type ? normalizeText(data.type) : data.type,
+        material: data.material ? normalizeText(data.material) : data.material,
+        images,
+      }
+
       const url = isEdit ? `/api/admin/products/${product?.id}` : "/api/admin/products"
       const method = isEdit ? "PUT" : "POST"
 
       const response = await fetch(url, {
         method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify(normalizedData),
       })
 
       if (!response.ok) {
@@ -201,6 +272,85 @@ export function ProductForm({ product, isEdit }: ProductFormProps) {
                 )}
               </div>
             </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Product Images</CardTitle>
+            <CardDescription>Upload up to 5 product images (Max 5MB each)</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Image Upload Button */}
+            <div className="flex items-center gap-4">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/webp"
+                multiple
+                onChange={handleImageUpload}
+                className="hidden"
+                disabled={uploading || images.length >= 5}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => fileInputRef.current?.click()}
+                disabled={uploading || images.length >= 5}
+                className="border-primary text-primary hover:bg-primary/10"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                {uploading ? "Uploading..." : "Upload Images"}
+              </Button>
+              <span className="text-sm text-gray-400">
+                {images.length} / 5 images
+              </span>
+            </div>
+
+            {/* Image Preview Grid */}
+            {images.length > 0 ? (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                {images.map((url, index) => (
+                  <div
+                    key={index}
+                    className="relative aspect-square border-2 border-gray-800 rounded-lg overflow-hidden group hover:border-primary transition-colors"
+                  >
+                    <Image
+                      src={url}
+                      alt={`Product image ${index + 1}`}
+                      fill
+                      className="object-cover"
+                      sizes="(max-width: 768px) 50vw, (max-width: 1024px) 33vw, 20vw"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      className="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity"
+                      disabled={uploading}
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                    {index === 0 && (
+                      <div className="absolute bottom-2 left-2 bg-primary text-black text-xs px-2 py-1 rounded">
+                        Primary
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="border-2 border-dashed border-gray-800 rounded-lg p-12 text-center">
+                <ImageIcon className="h-12 w-12 mx-auto text-gray-600 mb-4" />
+                <p className="text-gray-400 mb-2">No images uploaded</p>
+                <p className="text-sm text-gray-500">
+                  Click &quot;Upload Images&quot; to add product photos
+                </p>
+              </div>
+            )}
+
+            {errors.images && (
+              <p className="text-sm text-red-600">{errors.images.message}</p>
+            )}
           </CardContent>
         </Card>
 

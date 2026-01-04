@@ -14,11 +14,10 @@ async function getProduct(slug: string) {
   const product = await prisma.product.findUnique({
     where: { 
       slug: slug,
-      isPublished: true,
     },
   })
 
-  if (!product) {
+  if (!product || !product.isPublished || product.deletedAt) {
     notFound()
   }
 
@@ -33,6 +32,7 @@ async function getRelatedProducts(productId: string, category: string | null) {
       id: { not: productId },
       category: category,
       isPublished: true,
+      deletedAt: null,
     },
     take: 4,
     orderBy: { createdAt: "desc" },

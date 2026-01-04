@@ -95,24 +95,15 @@ export async function DELETE(req: Request) {
       },
     })
 
-    if (ordersWithProducts.length > 0) {
-      const usedProductIds = [...new Set(ordersWithProducts.map((item) => item.productId))]
-      return NextResponse.json(
-        {
-          error: "Some products are used in orders and cannot be deleted",
-          usedProducts: usedProductIds,
-          orderCount: ordersWithProducts.length,
-        },
-        { status: 400 }
-      )
-    }
-
-    // Delete products
-    const result = await prisma.product.deleteMany({
+    // Soft delete products (set deletedAt timestamp)
+    const result = await prisma.product.updateMany({
       where: {
         id: {
           in: productIds,
         },
+      },
+      data: {
+        deletedAt: new Date(),
       },
     })
 
@@ -120,6 +111,7 @@ export async function DELETE(req: Request) {
       success: true,
       deletedCount: result.count,
       message: `Successfully deleted ${result.count} product(s)`,
+      hasOrderHistory: ordersWithProducts.length > 0,
     })
   } catch (error) {
     console.error("Bulk delete error:", error)
