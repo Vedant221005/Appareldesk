@@ -1,0 +1,416 @@
+// ApparelDesk Database Schema
+// Complete e-commerce system with admin and customer portals
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ==========================================
+// ENUMS
+// ==========================================
+
+enum UserRole {
+  ADMIN
+  CUSTOMER
+}
+
+enum ContactType {
+  CUSTOMER
+  VENDOR
+  BOTH
+}
+
+enum OrderStatus {
+  DRAFT
+  CONFIRMED
+  PROCESSING
+  SHIPPED
+  OUT_FOR_DELIVERY
+  DELIVERED
+  CANCELLED
+  COMPLETED
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  CANCELLED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum PaymentMethod {
+  CASHFREE
+  CASH
+  BANK_TRANSFER
+  CHEQUE
+}
+
+// ==========================================
+// CORE MODELS
+// ==========================================
+
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  role          UserRole  @default(CUSTOMER)
+  contactId     String    @unique
+  contact       Contact   @relation(fields: [contactId], references: [id], onDelete: Cascade)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([email])
+}
+
+model Contact {
+  id            String       @id @default(cuid())
+  type          ContactType
+  name          String
+  email         String?
+  phone         String?
+  address       String?
+  city          String?
+  state         String?
+  country       String?
+  pincode       String?
+  gstNumber     String?      @unique
+  
+  // Relations
+  user          User?
+  saleOrders    SaleOrder[]
+  coupons       Coupon[]
+  purchaseOrders PurchaseOrder[]
+  vendorBills   VendorBill[]
+  
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([email])
+  @@index([type])
+  @@index([name])
+  @@index([phone])
+  @@index([city])
+}
+
+model Product {
+  id            String    @id @default(cuid())
+  name          String
+  slug          String    @unique
+  description   String?   @db.Text
+  category      String
+  type          String
+  material      String?
+  price         Float
+  stock         Int       @default(0)
+  images        String[]
+  isPublished   Boolean   @default(false)
+  
+  // Relations
+  saleOrderItems    SaleOrderItem[]
+  purchaseOrderItems PurchaseOrderItem[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([slug])
+  @@index([category])
+  @@index([type])
+  @@index([price])
+  @@index([stock])
+  @@index([isPublished])
+  @@index([name])
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED
+}
+
+model DiscountOffer {
+  id            String        @id @default(cuid())
+  name          String
+  description   String?
+  discountType  DiscountType
+  discountValue Float
+  minOrderAmount Float        @default(0)
+  maxDiscountAmount Float?
+  startDate     DateTime
+  endDate       DateTime
+  isActive      Boolean       @default(true)
+  
+  // Relations
+  coupons       Coupon[]
+  
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+}
+
+model Coupon {
+  id                String         @id @default(cuid())
+  code              String         @unique
+  name              String
+  description       String?
+  discountOfferId   String
+  discountOffer     DiscountOffer  @relation(fields: [discountOfferId], references: [id])
+  contactId         String?        // null = public coupon
+  contact           Contact?       @relation(fields: [contactId], references: [id])
+  maxUsageCount     Int            @default(1)
+  usedCount         Int            @default(0)
+  maxUsagePerUser   Int            @default(1)
+  isActive          Boolean        @default(true)
+  
+  // Relations
+  saleOrders        SaleOrder[]
+  
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+
+  @@index([code])
+  @@index([contactId])
+}
+
+model PaymentTerm {
+  id            String    @id @default(cuid())
+  name          String
+  daysUntilDue  Int
+  earlyPaymentDiscount Float @default(0)
+  earlyPaymentDays Int @default(0)
+  
+  // Relations
+  saleOrders    SaleOrder[]
+  purchaseOrders PurchaseOrder[]
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// ==========================================
+// SALES MODELS
+// ==========================================
+
+model SaleOrder {
+  id            String       @id @default(cuid())
+  orderNumber   String       @unique
+  customerId    String
+  customer      Contact      @relation(fields: [customerId], references: [id])
+  status        OrderStatus  @default(DRAFT)
+  
+  // Shipping & Tracking
+  shippingAddress String?
+  trackingNumber  String?
+  carrier         String?
+  estimatedDelivery DateTime?
+  deliveredAt     DateTime?
+  
+  // Pricing
+  subtotal      Float
+  discount      Float        @default(0)
+  tax           Float        @default(0)
+  total         Float
+  
+  // Coupon
+  couponId      String?
+  coupon        Coupon?      @relation(fields: [couponId], references: [id])
+  
+  // Payment Terms
+  paymentTermId String?
+  paymentTerm   PaymentTerm? @relation(fields: [paymentTermId], references: [id])
+  dueDate       DateTime?
+  
+  // Relations
+  items         SaleOrderItem[]
+  invoice       Invoice?
+  payments      Payment[]
+  
+  orderDate     DateTime     @default(now())
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([customerId])
+  @@index([orderNumber])
+  @@index([status])
+  @@index([orderDate])
+  @@index([total])
+  @@index([couponId])
+}
+
+model SaleOrderItem {
+  id            String    @id @default(cuid())
+  saleOrderId   String
+  saleOrder     SaleOrder @relation(fields: [saleOrderId], references: [id], onDelete: Cascade)
+  productId     String
+  product       Product   @relation(fields: [productId], references: [id])
+  quantity      Int
+  unitPrice     Float
+  total         Float
+  
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([saleOrderId])
+  @@index([productId])
+}
+
+model Invoice {
+  id            String         @id @default(cuid())
+  invoiceNumber String         @unique
+  saleOrderId   String         @unique
+  saleOrder     SaleOrder      @relation(fields: [saleOrderId], references: [id])
+  status        InvoiceStatus  @default(DRAFT)
+  
+  // Amounts
+  subtotal      Float
+  discount      Float          @default(0)
+  tax           Float          @default(0)
+  total         Float
+  paidAmount    Float          @default(0)
+  
+  dueDate       DateTime?
+  paidDate      DateTime?
+  
+  invoiceDate   DateTime       @default(now())
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+
+  @@index([invoiceNumber])
+  @@index([status])
+}
+
+// ==========================================
+// PURCHASE MODELS
+// ==========================================
+
+model PurchaseOrder {
+  id            String       @id @default(cuid())
+  orderNumber   String       @unique
+  vendorId      String
+  vendor        Contact      @relation(fields: [vendorId], references: [id])
+  status        OrderStatus  @default(DRAFT)
+  
+  // Pricing
+  subtotal      Float
+  tax           Float        @default(0)
+  total         Float
+  
+  // Payment Terms
+  paymentTermId String?
+  paymentTerm   PaymentTerm? @relation(fields: [paymentTermId], references: [id])
+  dueDate       DateTime?
+  
+  // Relations
+  items         PurchaseOrderItem[]
+  vendorBill    VendorBill?
+  payments      Payment[]
+  
+  orderDate     DateTime     @default(now())
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+
+  @@index([vendorId])
+  @@index([orderNumber])
+  @@index([status])
+}
+
+model PurchaseOrderItem {
+  id              String        @id @default(cuid())
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  productId       String
+  product         Product       @relation(fields: [productId], references: [id])
+  quantity        Int
+  unitPrice       Float
+  total           Float
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([purchaseOrderId])
+  @@index([productId])
+}
+
+model VendorBill {
+  id              String         @id @default(cuid())
+  billNumber      String         @unique
+  purchaseOrderId String         @unique
+  purchaseOrder   PurchaseOrder  @relation(fields: [purchaseOrderId], references: [id])
+  vendorId        String
+  vendor          Contact        @relation(fields: [vendorId], references: [id])
+  status          InvoiceStatus  @default(DRAFT)
+  
+  // Amounts
+  subtotal        Float
+  tax             Float          @default(0)
+  total           Float
+  paidAmount      Float          @default(0)
+  
+  dueDate         DateTime?
+  paidDate        DateTime?
+  
+  billDate        DateTime       @default(now())
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([billNumber])
+  @@index([vendorId])
+  @@index([status])
+}
+
+// ==========================================
+// PAYMENT MODEL
+// ==========================================
+
+model Payment {
+  id              String        @id @default(cuid())
+  amount          Float
+  method          PaymentMethod
+  status          PaymentStatus @default(PENDING)
+  
+  // Cashfree fields
+  cashfreeOrderId    String?    @unique
+  cashfreePaymentId  String?    @unique
+  transactionId      String?    // Generic transaction ID for receipts
+  
+  // Reference
+  saleOrderId     String?
+  saleOrder       SaleOrder?     @relation(fields: [saleOrderId], references: [id])
+  purchaseOrderId String?
+  purchaseOrder   PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id])
+  
+  notes           String?        @db.Text
+  
+  paymentDate     DateTime       @default(now())
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([saleOrderId])
+  @@index([purchaseOrderId])
+  @@index([cashfreeOrderId])
+}
+
+// ==========================================
+// SYSTEM SETTINGS
+// ==========================================
+
+model SystemSetting {
+  id              String   @id @default(cuid())
+  key             String   @unique
+  value           String
+  description     String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([key])
+}
