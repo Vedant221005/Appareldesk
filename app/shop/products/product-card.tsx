@@ -8,6 +8,8 @@ import { ShoppingCart } from "lucide-react"
 import Image from "next/image"
 import { useCart } from "@/lib/cart-context"
 import { useState } from "react"
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
 
 interface ProductCardProps {
   product: {
@@ -28,11 +30,20 @@ export function ProductCard({ product }: ProductCardProps) {
   const hasImage = product.images.length > 0 && product.images[0]
   const isOutOfStock = product.stock === 0
   const { addItem } = useCart()
+  const { data: session } = useSession()
+  const router = useRouter()
   const [isAdding, setIsAdding] = useState(false)
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    
+    // Check if user is logged in
+    if (!session) {
+      router.push("/auth/login?callbackUrl=/shop/products")
+      return
+    }
+    
     setIsAdding(true)
     addItem({
       productId: product.id,

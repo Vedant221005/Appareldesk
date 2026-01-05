@@ -8,8 +8,17 @@ export default withAuth(
     const path = req.nextUrl.pathname
 
     // Public paths that don't require authentication
-    const publicPaths = ["/auth/login", "/auth/signup", "/auth/error"]
+    const publicPaths = ["/auth/login", "/auth/signup", "/auth/error", "/shop"]
     if (publicPaths.includes(path)) {
+      return NextResponse.next()
+    }
+    
+    // Allow /shop/* routes to be accessed without authentication (except protected ones)
+    if (path.startsWith("/shop")) {
+      // Redirect ADMIN users from shop to admin dashboard
+      if (token && token.role === UserRole.ADMIN) {
+        return NextResponse.redirect(new URL("/admin", req.url))
+      }
       return NextResponse.next()
     }
 
@@ -32,16 +41,6 @@ export default withAuth(
       return NextResponse.next()
     }
 
-    // Shop routes - only accessible by CUSTOMER role
-    if (path.startsWith("/shop")) {
-      if (!token) {
-        return NextResponse.redirect(new URL("/auth/login", req.url))
-      }
-      if (token.role !== UserRole.CUSTOMER) {
-        return NextResponse.redirect(new URL("/admin", req.url))
-      }
-      return NextResponse.next()
-    }
 
     // API routes protection
     if (path.startsWith("/api")) {
@@ -69,10 +68,7 @@ export default withAuth(
 
     // Root path redirect based on role
     if (path === "/") {
-      if (!token) {
-        return NextResponse.redirect(new URL("/auth/login", req.url))
-      }
-      if (token.role === UserRole.ADMIN) {
+      if (token && token.role === UserRole.ADMIN) {
         return NextResponse.redirect(new URL("/admin", req.url))
       }
       return NextResponse.redirect(new URL("/shop", req.url))

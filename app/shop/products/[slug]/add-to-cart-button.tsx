@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button"
 import { ShoppingCart } from "lucide-react"
 import { useCart } from "@/lib/cart-context"
 import { useState } from "react"
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
 
 interface AddToCartButtonProps {
   productId: string
@@ -25,9 +27,17 @@ export function AddToCartButton({
   isOutOfStock 
 }: AddToCartButtonProps) {
   const { addItem } = useCart()
+  const { data: session } = useSession()
+  const router = useRouter()
   const [isAdding, setIsAdding] = useState(false)
 
   const handleAddToCart = () => {
+    // Check if user is logged in
+    if (!session) {
+      router.push(`/auth/login?callbackUrl=/shop/products/${slug}`)
+      return
+    }
+    
     setIsAdding(true)
     addItem({
       productId,

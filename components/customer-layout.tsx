@@ -1,6 +1,6 @@
 "use client"
 
-import { useRequireCustomer } from "@/lib/hooks/use-auth"
+import { useOptionalAuth } from "@/lib/hooks/use-auth"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
@@ -13,10 +13,12 @@ import {
   Package,
   Menu,
   X,
+  LogIn,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
 import { useCart } from "@/lib/cart-context"
 import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
 
 const navigation = [
   {
@@ -51,7 +53,7 @@ export function CustomerLayout({
 }: {
   children: React.ReactNode
 }) {
-  const { session, status } = useRequireCustomer()
+  const { session, status } = useOptionalAuth()
   const pathname = usePathname()
   const { totalItems } = useCart()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
@@ -73,21 +75,6 @@ export function CustomerLayout({
     }
   }, [isMobileMenuOpen])
 
-  if (status === "loading") {
-    return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
-        </div>
-      </div>
-    )
-  }
-
-  if (!session) {
-    return null
-  }
-
   return (
     <div className="min-h-screen bg-black">
       {/* Header */}
@@ -108,7 +95,13 @@ export function CustomerLayout({
                 <h1 className="text-2xl font-bold text-primary group-hover:scale-105 transition-transform">ApparelDesk</h1>
               </Link>
               <nav className="hidden md:flex space-x-1">
-                {navigation.map((item) => {
+                {navigation.filter(item => {
+                  // Show only Home, Products, and Cart for non-logged-in users
+                  if (!session) {
+                    return item.href === "/shop" || item.href === "/shop/products" || item.href === "/cart"
+                  }
+                  return true
+                }).map((item) => {
                   const isActive = 
                     pathname === item.href || 
                     (item.href !== "/shop" && pathname?.startsWith(item.href + "/"))
@@ -144,7 +137,16 @@ export function CustomerLayout({
                   </Badge>
                 )}
               </Link>
-              <UserNav />
+              {session ? (
+                <UserNav />
+              ) : (
+                <Link href="/auth/login">
+                  <Button variant="default" size="sm" className="bg-primary text-black hover:bg-primary/90">
+                    <LogIn className="h-4 w-4 mr-2" />
+                    Login
+                  </Button>
+                </Link>
+              )}
             </div>
           </div>
         </div>
@@ -182,7 +184,13 @@ export function CustomerLayout({
 
           {/* Navigation Links */}
           <nav className="p-4 space-y-2">
-            {navigation.map((item) => {
+            {navigation.filter(item => {
+              // Show only Home, Products, and Cart for non-logged-in users
+              if (!session) {
+                return item.href === "/shop" || item.href === "/shop/products" || item.href === "/cart"
+              }
+              return true
+            }).map((item) => {
               const isActive = 
                 pathname === item.href || 
                 (item.href !== "/shop" && pathname?.startsWith(item.href + "/"))

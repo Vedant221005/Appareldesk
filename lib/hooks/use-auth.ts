@@ -47,3 +47,11 @@ export function useRequireAdmin() {
 export function useRequireCustomer() {
   return useRequireAuth(UserRole.CUSTOMER)
 }
+
+/**
+ * Hook for pages that can be accessed with or without authentication
+ */
+export function useOptionalAuth() {
+  const { data: session, status } = useSession()
+  return { session, status }
+}

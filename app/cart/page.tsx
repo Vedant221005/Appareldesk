@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
+import { useSession } from "next-auth/react"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
@@ -14,10 +15,18 @@ import Link from "next/link"
 
 export default function CartPage() {
   const router = useRouter()
+  const { data: session, status } = useSession()
   const { items, totalItems, totalPrice, updateQuantity, removeItem, clearCart } = useCart()
   const [taxRate, setTaxRate] = useState(18)
   const [shippingFee, setShippingFee] = useState(0)
   const [currency, setCurrency] = useState("₹")
+
+  // Redirect to login if not authenticated
+  useEffect(() => {
+    if (status === "unauthenticated") {
+      router.push("/auth/login?callbackUrl=/cart")
+    }
+  }, [status, router])
 
   useEffect(() => {
     fetch("/api/settings/public")
