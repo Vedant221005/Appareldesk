@@ -22,5 +22,20 @@ export default async function EditProductPage({
   const { id } = await params
   const product = await getProduct(id)
 
-  return <ProductForm product={product} isEdit />
+  // Transform product to match ProductForm expected type
+  const productData = {
+    id: product.id,
+    name: product.name,
+    slug: product.slug,
+    description: product.description || "",
+    category: product.category,
+    type: product.type,
+    material: product.material || "",
+    price: product.price,
+    stock: product.stock,
+    images: product.images,
+    isPublished: product.isPublished,
+  }
+
+  return <ProductForm product={productData} isEdit />
 }

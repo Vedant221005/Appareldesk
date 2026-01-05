@@ -27,7 +27,13 @@ export async function POST(req: Request) {
     // Verify order exists and belongs to user
     const order = await prisma.saleOrder.findUnique({
       where: { id: validatedData.orderId },
-      include: { customer: true },
+      include: { 
+        customer: {
+          include: {
+            user: true
+          }
+        }
+      },
     })
 
     if (!order) {
@@ -37,7 +43,7 @@ export async function POST(req: Request) {
       )
     }
 
-    if (order.customer.userId !== session.user.id) {
+    if (!order.customer.user || order.customer.user.id !== session.user.id) {
       return NextResponse.json(
         { error: "Unauthorized" },
         { status: 403 }
