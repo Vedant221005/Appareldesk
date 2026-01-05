@@ -4,14 +4,15 @@ if (!process.env.CASHFREE_APP_ID || !process.env.CASHFREE_SECRET_KEY) {
 
 const CASHFREE_APP_ID = process.env.CASHFREE_APP_ID
 const CASHFREE_SECRET_KEY = process.env.CASHFREE_SECRET_KEY
-const CASHFREE_ENV = process.env.NODE_ENV === "production" ? "production" : "sandbox"
 const CASHFREE_API_VERSION = "2023-08-01"
 
 // Base URL for Cashfree API
+// TEST credentials always use sandbox, production credentials use production API
 const getBaseUrl = () => {
-  return CASHFREE_ENV === "production"
-    ? "https://api.cashfree.com/pg"
-    : "https://sandbox.cashfree.com/pg"
+  const isTestMode = CASHFREE_APP_ID?.startsWith("TEST")
+  return isTestMode
+    ? "https://sandbox.cashfree.com/pg"
+    : "https://api.cashfree.com/pg"
 }
 
 // Helper function to make Cashfree API calls
