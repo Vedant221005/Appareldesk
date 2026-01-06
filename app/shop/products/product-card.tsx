@@ -4,7 +4,7 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { ShoppingCart } from "lucide-react"
+import { ShoppingCart, Package } from "lucide-react"
 import Image from "next/image"
 import { useCart } from "@/lib/cart-context"
 import { useState } from "react"
@@ -69,8 +69,8 @@ export function ProductCard({ product }: ProductCardProps) {
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center">
-              <ShoppingCart className="h-16 w-16 text-gray-300" />
+            <div className="w-full h-full flex items-center justify-center bg-gray-800">
+              <Package className="h-16 w-16 text-primary" />
             </div>
           )}
           {isOutOfStock && (

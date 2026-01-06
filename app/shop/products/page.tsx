@@ -3,6 +3,9 @@ import { ProductCard } from "./product-card"
 import { ProductFilters } from "./product-filters"
 import { Prisma } from "@prisma/client"
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 async function getProducts(searchParams: {
   category?: string
   type?: string
