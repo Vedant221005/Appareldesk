@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef } from "react"
+import { useState, useRef, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm, Controller } from "react-hook-form"
@@ -10,11 +10,13 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Switch } from "@/components/ui/switch"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
 import Link from "next/link"
 import { ArrowLeft, Upload, X, Image as ImageIcon } from "lucide-react"
 import Image from "next/image"
+import { CATEGORIES, CATEGORY_TYPES, MATERIALS } from "@/lib/product-constants"
 
 interface ProductFormProps {
   product?: ProductFormData & { id: string }
@@ -37,6 +39,7 @@ export function ProductForm({ product, isEdit }: ProductFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [images, setImages] = useState<string[]>(product?.images || [])
+  const [selectedCategory, setSelectedCategory] = useState<string>(product?.category || "")
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const {
@@ -65,6 +68,15 @@ export function ProductForm({ product, isEdit }: ProductFormProps) {
       isPublished: true,
     },
   })
+
+  // Watch category changes and reset type when category changes
+  const currentCategory = watch("category")
+  useEffect(() => {
+    if (currentCategory && currentCategory !== selectedCategory && !isEdit) {
+      setValue("type", "")
+      setSelectedCategory(currentCategory)
+    }
+  }, [currentCategory, selectedCategory, setValue, isEdit])
 
   // Auto-generate slug from name
   const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -235,11 +247,33 @@ export function ProductForm({ product, isEdit }: ProductFormProps) {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="category">Category *</Label>
-                <Input
-                  id="category"
-                  {...register("category")}
-                  placeholder="T-Shirts"
-                  disabled={isSubmitting}
+                <Controller
+                  name="category"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={(value) => {
+                        field.onChange(value)
+                        setSelectedCategory(value)
+                        if (!isEdit) {
+                          setValue("type", "")
+                        }
+                      }}
+                      disabled={isSubmitting}
+                    >
+                      <SelectTrigger className="border-gray-800 bg-black text-white">
+                        <SelectValue placeholder="Select category" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-black border-gray-800">
+                        {CATEGORIES.map((category) => (
+                          <SelectItem key={category} value={category} className="text-white hover:bg-gray-900">
+                            {category}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 />
                 {errors.category && (
                   <p className="text-sm text-red-600">{errors.category.message}</p>
@@ -248,11 +282,27 @@ export function ProductForm({ product, isEdit }: ProductFormProps) {
 
               <div className="space-y-2">
                 <Label htmlFor="type">Type *</Label>
-                <Input
-                  id="type"
-                  {...register("type")}
-                  placeholder="Casual"
-                  disabled={isSubmitting}
+                <Controller
+                  name="type"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value}
+                      onValueChange={field.onChange}
+                      disabled={isSubmitting || !watch("category")}
+                    >
+                      <SelectTrigger className="border-gray-800 bg-black text-white">
+                        <SelectValue placeholder={watch("category") ? "Select type" : "Select category first"} />
+                      </SelectTrigger>
+                      <SelectContent className="bg-black border-gray-800">
+                        {watch("category") && CATEGORY_TYPES[watch("category")]?.map((type) => (
+                          <SelectItem key={type} value={type} className="text-white hover:bg-gray-900">
+                            {type}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 />
                 {errors.type && (
                   <p className="text-sm text-red-600">{errors.type.message}</p>
@@ -261,11 +311,27 @@ export function ProductForm({ product, isEdit }: ProductFormProps) {
 
               <div className="space-y-2">
                 <Label htmlFor="material">Material</Label>
-                <Input
-                  id="material"
-                  {...register("material")}
-                  placeholder="Cotton"
-                  disabled={isSubmitting}
+                <Controller
+                  name="material"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      value={field.value || ""}
+                      onValueChange={field.onChange}
+                      disabled={isSubmitting}
+                    >
+                      <SelectTrigger className="border-gray-800 bg-black text-white">
+                        <SelectValue placeholder="Select material" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-black border-gray-800">
+                        {MATERIALS.map((material) => (
+                          <SelectItem key={material} value={material} className="text-white hover:bg-gray-900">
+                            {material}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
                 />
                 {errors.material && (
                   <p className="text-sm text-red-600">{errors.material.message}</p>

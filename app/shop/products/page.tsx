@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma"
 import { ProductCard } from "./product-card"
 import { ProductFilters } from "./product-filters"
 import { Prisma } from "@prisma/client"
+import { CATEGORIES, CATEGORY_TYPES, MATERIALS } from "@/lib/product-constants"
 
 export const dynamic = 'force-dynamic'
 export const revalidate = 0
@@ -44,38 +45,23 @@ async function getProducts(searchParams: {
   return products
 }
 
-async function getFilterOptions() {
-  const products = await prisma.product.findMany({
-    where: { 
-      isPublished: true,
-      deletedAt: null, // Exclude soft-deleted products
-    },
-    select: {
-      category: true,
-      type: true,
-      material: true,
-    },
-  })
+async function getFilterOptions(selectedCategory?: string) {
+  // Always use the predefined categories
+  const categories = [...CATEGORIES]
+  
+  // If a category is selected, show only its types; otherwise show all types
+  const types = selectedCategory && CATEGORY_TYPES[selectedCategory]
+    ? CATEGORY_TYPES[selectedCategory]
+    : Object.values(CATEGORY_TYPES).flat()
+  
+  // Always use the predefined materials
+  const materials = [...MATERIALS]
 
-  // Helper to get unique values case-insensitively
-  const getUniqueValues = (values: (string | null)[]): string[] => {
-    const seen = new Map<string, string>()
-    values.forEach((value) => {
-      if (value) {
-        const lowerValue = value.toLowerCase()
-        if (!seen.has(lowerValue)) {
-          seen.set(lowerValue, value)
-        }
-      }
-    })
-    return Array.from(seen.values())
+  return { 
+    categories, 
+    types: [...new Set(types)], // Remove duplicates
+    materials 
   }
-
-  const categories = getUniqueValues(products.map((p) => p.category))
-  const types = getUniqueValues(products.map((p) => p.type))
-  const materials = getUniqueValues(products.map((p) => p.material))
-
-  return { categories, types, materials }
 }
 
 export default async function ShopProductsPage({
@@ -90,7 +76,7 @@ export default async function ShopProductsPage({
 }) {
   const params = await searchParams
   const products = await getProducts(params)
-  const filterOptions = await getFilterOptions()
+  const filterOptions = await getFilterOptions(params.category)
 
   return (
     <div className="space-y-6">

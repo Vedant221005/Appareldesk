@@ -4,6 +4,13 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Card } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { useRouter, useSearchParams } from "next/navigation"
 import { useState, useEffect } from "react"
 import { Search, X } from "lucide-react"
@@ -32,6 +39,12 @@ export function ProductFilters({ filterOptions }: ProductFiltersProps) {
       params.set(key, value)
     } else {
       params.delete(key)
+    }
+    
+    // Reset type when category changes
+    if (key === "category") {
+      params.delete("type")
+      setSelectedType("")
     }
     
     router.push(`/shop/products?${params.toString()}`)
@@ -75,51 +88,67 @@ export function ProductFilters({ filterOptions }: ProductFiltersProps) {
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-sm font-medium text-white">Active Filters:</span>
             {search && (
-              <Badge variant="secondary" className="gap-1 text-white border-gray-700">
+              <Badge variant="secondary" className="gap-2 text-white border-gray-700 pr-1">
                 Search: {search}
-                <X
-                  className="h-3 w-3 cursor-pointer hover:text-primary"
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-5 w-5 p-0 hover:bg-gray-700"
                   onClick={() => {
                     setSearch("")
                     updateFilters("search", "")
                   }}
-                />
+                >
+                  <X className="h-3 w-3 hover:text-primary" />
+                </Button>
               </Badge>
             )}
             {selectedCategory && (
-              <Badge variant="secondary" className="gap-1 text-white border-gray-700">
+              <Badge variant="secondary" className="gap-2 text-white border-gray-700 pr-1">
                 {selectedCategory}
-                <X
-                  className="h-3 w-3 cursor-pointer hover:text-primary"
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-5 w-5 p-0 hover:bg-gray-700"
                   onClick={() => {
                     setSelectedCategory("")
                     updateFilters("category", "")
                   }}
-                />
+                >
+                  <X className="h-3 w-3 hover:text-primary" />
+                </Button>
               </Badge>
             )}
             {selectedType && (
-              <Badge variant="secondary" className="gap-1 text-white border-gray-700">
+              <Badge variant="secondary" className="gap-2 text-white border-gray-700 pr-1">
                 {selectedType}
-                <X
-                  className="h-3 w-3 cursor-pointer hover:text-primary"
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-5 w-5 p-0 hover:bg-gray-700"
                   onClick={() => {
                     setSelectedType("")
                     updateFilters("type", "")
                   }}
-                />
+                >
+                  <X className="h-3 w-3 hover:text-primary" />
+                </Button>
               </Badge>
             )}
             {selectedMaterial && (
-              <Badge variant="secondary" className="gap-1 text-white border-gray-700">
+              <Badge variant="secondary" className="gap-2 text-white border-gray-700 pr-1">
                 {selectedMaterial}
-                <X
-                  className="h-3 w-3 cursor-pointer hover:text-primary"
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-5 w-5 p-0 hover:bg-gray-700"
                   onClick={() => {
                     setSelectedMaterial("")
                     updateFilters("material", "")
                   }}
-                />
+                >
+                  <X className="h-3 w-3 hover:text-primary" />
+                </Button>
               </Badge>
             )}
             <Button
@@ -133,84 +162,81 @@ export function ProductFilters({ filterOptions }: ProductFiltersProps) {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {/* Categories */}
-          {filterOptions.categories.length > 0 && (
-            <div>
-              <h3 className="font-semibold mb-3 text-white">Category</h3>
-              <div className="space-y-2">
+          <div>
+            <label className="text-sm font-medium text-white mb-2 block">Category</label>
+            <Select
+              value={selectedCategory}
+              onValueChange={(value) => {
+                const newValue = value === "all" ? "" : value
+                setSelectedCategory(newValue)
+                updateFilters("category", newValue)
+              }}
+            >
+              <SelectTrigger className="border-gray-700 text-white">
+                <SelectValue placeholder="All Categories" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Categories</SelectItem>
                 {filterOptions.categories.map((category) => (
-                  <button
-                    key={category}
-                    onClick={() => {
-                      const newValue = selectedCategory === category ? "" : category
-                      setSelectedCategory(newValue)
-                      updateFilters("category", newValue)
-                    }}
-                    className={`block w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
-                      selectedCategory === category
-                        ? "bg-primary text-black font-medium"
-                        : "text-gray-300 hover:text-primary"
-                    }`}
-                  >
+                  <SelectItem key={category} value={category}>
                     {category}
-                  </button>
+                  </SelectItem>
                 ))}
-              </div>
-            </div>
-          )}
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Types */}
-          {filterOptions.types.length > 0 && (
-            <div>
-              <h3 className="font-semibold mb-3 text-white">Type</h3>
-              <div className="space-y-2">
+          <div>
+            <label className="text-sm font-medium text-white mb-2 block">Type</label>
+            <Select
+              value={selectedType}
+              onValueChange={(value) => {
+                const newValue = value === "all" ? "" : value
+                setSelectedType(newValue)
+                updateFilters("type", newValue)
+              }}
+            >
+              <SelectTrigger className="border-gray-700 text-white">
+                <SelectValue placeholder="All Types" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Types</SelectItem>
                 {filterOptions.types.map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => {
-                      const newValue = selectedType === type ? "" : type
-                      setSelectedType(newValue)
-                      updateFilters("type", newValue)
-                    }}
-                    className={`block w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
-                      selectedType === type
-                        ? "bg-primary text-black font-medium"
-                        : "text-gray-300 hover:text-primary"
-                    }`}
-                  >
+                  <SelectItem key={type} value={type}>
                     {type}
-                  </button>
+                  </SelectItem>
                 ))}
-              </div>
-            </div>
-          )}
+              </SelectContent>
+            </Select>
+          </div>
 
           {/* Materials */}
-          {filterOptions.materials.length > 0 && (
-            <div>
-              <h3 className="font-semibold mb-3 text-white">Material</h3>
-              <div className="space-y-2">
+          <div>
+            <label className="text-sm font-medium text-white mb-2 block">Material</label>
+            <Select
+              value={selectedMaterial}
+              onValueChange={(value) => {
+                const newValue = value === "all" ? "" : value
+                setSelectedMaterial(newValue)
+                updateFilters("material", newValue)
+              }}
+            >
+              <SelectTrigger className="border-gray-700 text-white">
+                <SelectValue placeholder="All Materials" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Materials</SelectItem>
                 {filterOptions.materials.map((material) => (
-                  <button
-                    key={material}
-                    onClick={() => {
-                      const newValue = selectedMaterial === material ? "" : material
-                      setSelectedMaterial(newValue)
-                      updateFilters("material", newValue)
-                    }}
-                    className={`block w-full text-left px-3 py-2 rounded-md text-sm transition-colors ${
-                      selectedMaterial === material
-                        ? "bg-primary text-black font-medium"
-                        : "text-gray-300 hover:text-primary"
-                    }`}
-                  >
+                  <SelectItem key={material} value={material}>
                     {material}
-                  </button>
+                  </SelectItem>
                 ))}
-              </div>
-            </div>
-          )}
+              </SelectContent>
+            </Select>
+          </div>
         </div>
       </div>
     </Card>
