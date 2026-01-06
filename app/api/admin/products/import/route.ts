@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { prisma } from "@/lib/prisma"
 import { z } from "zod"
+import { revalidatePath } from "next/cache"
 
 const csvImportSchema = z.object({
   products: z.array(
@@ -101,6 +102,10 @@ export async function POST(req: Request) {
       details: results,
       message: `Successfully imported ${results.success.length} product(s), ${results.failed.length} failed`,
     })
+
+    // Clear cache for product pages
+    revalidatePath('/shop/products')
+    revalidatePath('/admin/products')
   } catch (error) {
     if (error instanceof z.ZodError) {
       return NextResponse.json(

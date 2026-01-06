@@ -4,6 +4,9 @@ import Link from "next/link"
 import { Plus } from "lucide-react"
 import { ProductsClient } from "./products-client"
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 async function getProducts() {
   const products = await prisma.product.findMany({
     where: { deletedAt: null },

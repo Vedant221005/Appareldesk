@@ -4,6 +4,7 @@ import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { z } from "zod"
 import { sendEmail, getOrderConfirmationEmail } from "@/lib/email"
+import { revalidatePath } from "next/cache"
 
 const orderItemSchema = z.object({
   productId: z.string(),
@@ -228,6 +229,11 @@ export async function POST(req: Request) {
         console.error("Failed to send order confirmation email:", error)
       })
     }
+
+    // Clear cache for order-related pages
+    revalidatePath('/orders')
+    revalidatePath('/admin/orders')
+    revalidatePath('/admin')
 
     return NextResponse.json(order, { status: 201 })
   } catch (error) {

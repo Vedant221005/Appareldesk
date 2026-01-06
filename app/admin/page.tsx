@@ -2,6 +2,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { prisma } from "@/lib/prisma"
 import { Package, Users, ShoppingCart, TrendingUp, Truck, FileText } from "lucide-react"
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 async function getDashboardStats() {
   const [
     productsCount,

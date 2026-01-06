@@ -5,6 +5,9 @@ import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
 import { Plus, Users, Mail, Phone, ShoppingBag } from "lucide-react"
 
+export const dynamic = 'force-dynamic'
+export const revalidate = 0
+
 async function getCustomers() {
   return await prisma.contact.findMany({
     where: {

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { productSchema } from "@/lib/validations/product"
 import { withAdminAuth } from "@/lib/api-middleware"
 import { z } from "zod"
+import { revalidatePath } from "next/cache"
 
 // GET all products
 export const GET = withAdminAuth(async (req: Request) => {
@@ -78,6 +79,10 @@ export const POST = withAdminAuth(async (req: Request) => {
         isPublished: validatedData.isPublished,
       },
     })
+
+    // Clear cache for product pages
+    revalidatePath('/shop/products')
+    revalidatePath('/admin/products')
 
     return NextResponse.json(product, { status: 201 })
   } catch (error) {

@@ -3,6 +3,7 @@ import { prisma } from "@/lib/prisma"
 import { productSchema } from "@/lib/validations/product"
 import { withAdminAuth } from "@/lib/api-middleware"
 import { z } from "zod"
+import { revalidatePath } from "next/cache"
 
 // GET single product
 export const GET = withAdminAuth(async (req: Request, { params }: { params: Promise<{ id: string }> }) => {
@@ -78,6 +79,11 @@ export const PUT = withAdminAuth(async (req: Request, { params }: { params: Prom
       },
     })
 
+    // Clear cache for product pages
+    revalidatePath('/shop/products')
+    revalidatePath('/admin/products')
+    revalidatePath(`/shop/products/${product.slug}`)
+
     return NextResponse.json(product)
   } catch (error) {
     if (error instanceof z.ZodError) {
@@ -116,6 +122,10 @@ export const DELETE = withAdminAuth(async (req: Request, { params }: { params: P
       where: { id: id },
       data: { deletedAt: new Date() },
     })
+
+    // Clear cache for product pages
+    revalidatePath('/shop/products')
+    revalidatePath('/admin/products')
 
     return NextResponse.json({ message: "Product deleted successfully" })
   } catch (error) {
